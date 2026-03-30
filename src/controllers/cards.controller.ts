@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from 'express';
 
 import Card from '../models/card.model';
 import type { ICard, SessionRequest } from '../utils/types';
+import HttpError from '../utils/errors/httpError';
+import { HttpStatus } from '../utils/httpStatuses';
 
 function proxyCatch(fn: Function) {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -10,13 +12,13 @@ function proxyCatch(fn: Function) {
 }
 
 // Получить все карточки
-export const getCards = proxyCatch(async (req: Request, res: Response, next: NextFunction) => {
+export const getCards = proxyCatch(async (req: Request, res: Response) => {
   const cards: ICard[] = await Card.find().populate('owner');
   return res.json(cards);
 });
 
 // Создать карточку
-export const createCard = proxyCatch(async (req: Request, res: Response, next: NextFunction) => {
+export const createCard = proxyCatch(async (req: Request, res: Response) => {
   const sessionReq = req as SessionRequest;
   const { name, link } = req.body;
   const card: ICard = await Card.create({
@@ -28,31 +30,32 @@ export const createCard = proxyCatch(async (req: Request, res: Response, next: N
 });
 
 // Удалить карточку
-export const deleteCard = proxyCatch(async (req: Request, res: Response, next: NextFunction) => {
+export const deleteCard = proxyCatch(async (req: Request, res: Response) => {
   const sessionReq = req as SessionRequest;
   const card = await Card.findById(req.params.cardId);
-  if (!card || String(card.owner) !== sessionReq.user._id) {
-    return res.status(403).json({ error: 'Access denied' });
-  }
+
+  if (!card) throw new HttpError(HttpStatus.NotFound);
+  if (String(card.owner) !== sessionReq.user._id) throw new HttpError(HttpStatus.Forbidden);
+
   await Card.deleteOne({ id: req.params.cardId });
   return res.json({ message: 'Card deleted' });
 });
 
 // Лойс
-export const likeCard = proxyCatch(async (req: Request, res: Response, next: NextFunction) => {
+export const likeCard = proxyCatch(async (req: Request, res: Response) => {
   const sessionReq = req as SessionRequest;
   const card: ICard | null = await Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: sessionReq.user._id } }, // добавить _id в массив, если его там нет
     { new: true },
   );
-  if (!card) return res.status(404).json({ error: 'Card not found' });
+  if (!card) throw new HttpError(HttpStatus.NotFound);
 
   return res.json({ likes: card.likes.length });
 });
 
 // Диз
-export const dislikeCard = proxyCatch(async (req: Request, res: Response, next: NextFunction) => {
+export const dislikeCard = proxyCatch(async (req: Request, res: Response) => {
   const sessionReq = req as SessionRequest;
   const card: ICard | null = await Card.findByIdAndUpdate(
     req.params.cardId,
@@ -60,7 +63,7 @@ export const dislikeCard = proxyCatch(async (req: Request, res: Response, next: 
     { new: true },
   );
 
-  if (!card) return res.status(404).json({ error: 'Card not found' });
+  if (!card) throw new HttpError(HttpStatus.NotFound);
 
   return res.json({ likes: card.likes.length });
 });

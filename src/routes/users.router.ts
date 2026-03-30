@@ -10,8 +10,9 @@ const protectedRouter = Router();
 //-----------------------------------------------------------------------------------
 
 // создаёт пользователя
-publicRouter.post('/users', celebrate.createUser, controller.createUser);
-publicRouter.post('/users/login', celebrate.login, controller.login);
+publicRouter.post('/users/signup', celebrate.createUser, controller.createUser);
+// логин
+publicRouter.post('/users/signin', celebrate.login, controller.login);
 
 // Защищенные роуты
 //-----------------------------------------------------------------------------------
@@ -22,6 +23,9 @@ protectedRouter.get('/users', celebrate.getUsers, controller.getUsers);
 // возвращает пользователя по _id
 protectedRouter.get('/users/:userId', celebrate.getUser, controller.getUser);
 
+// просмотр собственного профиля
+protectedRouter.get('/users/me', celebrate.getMe, controller.getMe);
+
 // обновляет профиль
 protectedRouter.patch('/users/me', celebrate.updateUser, controller.updateUser);
 
@@ -29,6 +33,6 @@ protectedRouter.patch('/users/me', celebrate.updateUser, controller.updateUser);
 protectedRouter.patch('/users/me/avatar', celebrate.updateAvatar, controller.updateAvatar);
 
 // удаляет юзера
-protectedRouter.delete('/users/:userId', celebrate.deleteUser, controller.deleteUser);
+protectedRouter.delete('/users/me', celebrate.deleteUser, controller.deleteUser);
 
 export default { publicRouter, protectedRouter };

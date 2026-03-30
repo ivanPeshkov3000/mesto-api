@@ -1,15 +1,28 @@
 /* eslint-disable constructor-super */
 import mongoose from 'mongoose';
-import { HttpStatus } from '../httpStatuses';
+import { HttpStatus, THttpStatus } from '../httpStatuses';
 import HttpError from './httpError';
 
 export default class DbError extends HttpError {
   constructor(err: mongoose.Error) {
-    if (err instanceof mongoose.Error.DocumentNotFoundError) {
-      super(HttpStatus.NotFound);
-    } else if (err instanceof mongoose.Error.ValidationError || err instanceof mongoose.Error.CastError) {
-      super(HttpStatus.BadRequest);
-    } else { super(HttpStatus.InternalServerError); }
+    super(DbError.resolveStatus(err));
     this.name = 'DbError';
+    Object.setPrototypeOf(this, DbError.prototype);
+  }
+
+  private static resolveStatus(err: mongoose.Error | mongoose.mongo.MongoServerError | Error): THttpStatus {
+    if (err instanceof mongoose.Error.DocumentNotFoundError) {
+      return HttpStatus.NotFound;
+    }
+
+    if (err instanceof mongoose.Error.ValidationError || err instanceof mongoose.Error.CastError) {
+      return HttpStatus.BadRequest;
+    }
+
+    if (err instanceof mongoose.mongo.MongoServerError && err.code === 11000) {
+      return HttpStatus.Conflict;
+    }
+
+    return HttpStatus.InternalServerError;
   }
 }

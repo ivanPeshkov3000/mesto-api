@@ -1,6 +1,7 @@
 import winston from 'winston';
 import expressWinston from 'express-winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
+import { isCelebrateError } from 'celebrate';
 
 const {
   combine,
@@ -80,12 +81,22 @@ const errorLogger = expressWinston.errorLogger({
               : '';
 
             // стектрейс только из твоего кода
-            const stack = err?.stack
+            let stack = err?.stack
               ? err.stack
                 .split('\n')
                 .filter((line: string) => !line.includes('node_modules'))
                 .join('\n')
               : '';
+
+            if (isCelebrateError(err)) {
+              const errs: string[] = [];
+
+              err.details.forEach((value, key) => {
+                const messages = value.details.map((d) => `[${key}] ${d.message}`);
+                errs.push(...messages);
+              });
+              stack += `\n${errs.join('\n')}`;
+            }
 
             return `${level}: ${reqInfo} [${timeStamp}]\n${message}\n${stack}`;
           }),

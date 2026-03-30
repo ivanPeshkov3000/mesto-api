@@ -2,9 +2,9 @@ import { celebrate, Joi } from 'celebrate';
 
 const createUser = celebrate({
   body: Joi.object().required().keys({
-    name: Joi.string().required().min(2).max(30),
-    about: Joi.string().required().min(2).max(200),
-    avatar: Joi.string().required().min(2),
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(200),
+    avatar: Joi.string().min(2),
     email: Joi.string().required().min(2),
     password: Joi.string().required().min(2),
   }),
@@ -27,6 +27,10 @@ const getUsers = celebrate({
   query: Joi.object().max(0),
 });
 
+const getMe = celebrate({
+  query: Joi.object().max(0),
+});
+
 const updateUser = celebrate({
   body: Joi.object().required().keys({
     name: Joi.string().min(2).max(30),
@@ -44,31 +48,21 @@ const deleteUser = celebrate({
 
 const updateAvatar = celebrate({
   body: Joi.object().required().keys({
-    title: Joi.string().required().min(2).max(30),
-    text: Joi.string().required().min(2),
+    avatar: Joi.string().min(2),
   }),
 });
 
 // Cards
 const getCards = celebrate({
-  body: Joi.object().required().keys({
-    name: Joi.string().required().min(2).max(30),
-    link: Joi.string().uri().required(),
-  }),
+  query: Joi.object().max(0),
 });
 
 const likeCard = celebrate({
-  body: Joi.object().required().keys({
-    name: Joi.string().required().min(2).max(30),
-    link: Joi.string().uri().required(),
-  }),
+  query: Joi.object().max(0),
 });
 
 const dislikeCard = celebrate({
-  body: Joi.object().required().keys({
-    name: Joi.string().required().min(2).max(30),
-    link: Joi.string().uri().required(),
-  }),
+  query: Joi.object().max(0),
 });
 
 const createCard = celebrate({
@@ -79,16 +73,14 @@ const createCard = celebrate({
 });
 
 const deleteCard = celebrate({
-  body: Joi.object().required().keys({
-    name: Joi.string().required().min(2).max(30),
-    link: Joi.string().uri().required(),
-  }),
+  query: Joi.object().max(0),
 });
 
 export default {
   createUser,
   login,
   getUser,
+  getMe,
   getUsers,
   updateUser,
   deleteUser,
