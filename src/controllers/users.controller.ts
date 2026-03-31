@@ -1,16 +1,11 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt, { Secret } from 'jsonwebtoken';
 import 'dotenv/config';
 
 import User from '../models/user.model';
 import type { IUser, SessionRequest } from '../utils/types';
-
-function promiseCatch(fn: Function) {
-  return (req: Request, res: Response, next: NextFunction) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-  };
-}
+import promiseCatch from '../utils/promiseCatch';
 
 // Получить всех пользователей
 export const getUsers = promiseCatch(async (req: Request, res: Response) => {

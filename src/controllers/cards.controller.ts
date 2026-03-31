@@ -1,24 +1,19 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 
 import Card from '../models/card.model';
 import type { ICard, SessionRequest } from '../utils/types';
 import HttpError from '../utils/errors/httpError';
 import { HttpStatus } from '../utils/httpStatuses';
-
-function proxyCatch(fn: Function) {
-  return (req: Request, res: Response, next: NextFunction) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-  };
-}
+import promiseCatch from '../utils/promiseCatch';
 
 // Получить все карточки
-export const getCards = proxyCatch(async (req: Request, res: Response) => {
+export const getCards = promiseCatch(async (req: Request, res: Response) => {
   const cards: ICard[] = await Card.find().populate('owner');
   return res.json(cards);
 });
 
 // Создать карточку
-export const createCard = proxyCatch(async (req: Request, res: Response) => {
+export const createCard = promiseCatch(async (req: Request, res: Response) => {
   const sessionReq = req as SessionRequest;
   const { name, link } = req.body;
   const card: ICard = await Card.create({
@@ -30,7 +25,7 @@ export const createCard = proxyCatch(async (req: Request, res: Response) => {
 });
 
 // Удалить карточку
-export const deleteCard = proxyCatch(async (req: Request, res: Response) => {
+export const deleteCard = promiseCatch(async (req: Request, res: Response) => {
   const sessionReq = req as SessionRequest;
   const card = await Card.findById(req.params.cardId);
 
@@ -42,7 +37,7 @@ export const deleteCard = proxyCatch(async (req: Request, res: Response) => {
 });
 
 // Лойс
-export const likeCard = proxyCatch(async (req: Request, res: Response) => {
+export const likeCard = promiseCatch(async (req: Request, res: Response) => {
   const sessionReq = req as SessionRequest;
   const card: ICard | null = await Card.findByIdAndUpdate(
     req.params.cardId,
@@ -55,7 +50,7 @@ export const likeCard = proxyCatch(async (req: Request, res: Response) => {
 });
 
 // Диз
-export const dislikeCard = proxyCatch(async (req: Request, res: Response) => {
+export const dislikeCard = promiseCatch(async (req: Request, res: Response) => {
   const sessionReq = req as SessionRequest;
   const card: ICard | null = await Card.findByIdAndUpdate(
     req.params.cardId,

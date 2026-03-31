@@ -10,9 +10,9 @@ const protectedRouter = Router();
 //-----------------------------------------------------------------------------------
 
 // создаёт пользователя
-publicRouter.post('/users/signup', celebrate.createUser, controller.createUser);
+publicRouter.post('/signup', celebrate.createUser, controller.createUser);
 // логин
-publicRouter.post('/users/signin', celebrate.login, controller.login);
+publicRouter.post('/signin', celebrate.login, controller.login);
 
 // Защищенные роуты
 //-----------------------------------------------------------------------------------
