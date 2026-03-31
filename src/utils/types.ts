@@ -1,8 +1,8 @@
-import { Document, Types, Model } from 'mongoose';
+import { HydratedDocument, Types, Model } from 'mongoose';
 import { Request } from 'express';
 import { JwtPayload } from 'jsonwebtoken';
 
-export interface IUser extends Document {
+export interface IUser {
   name: string;
   about: string;
   avatar: string;
@@ -10,18 +10,22 @@ export interface IUser extends Document {
   password: string;
 }
 
+export type UserDocument = HydratedDocument<IUser>;
+
 export interface UserModel extends Model<IUser> {
   findUserByCredentials: (_email: string, _password: string) =>
-    Promise<Document<unknown, any, IUser>>
+    Promise<UserDocument>
 }
 
-export interface ICard extends Document {
+export interface ICard {
   name: string;
   link: string;
   owner: Types.ObjectId;
   likes: Types.ObjectId[];
   createdAt: Date;
 }
+
+export type CardDocument = HydratedDocument<ICard>;
 
 export interface IHttpError {
   message: string;

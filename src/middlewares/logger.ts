@@ -3,6 +3,19 @@ import expressWinston from 'express-winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 import { isCelebrateError } from 'celebrate';
 
+interface LoggerMeta {
+  error?: Error;
+  req?: {
+    method: string;
+    originalUrl: string;
+  };
+}
+
+interface LoggerInfo extends winston.Logform.TransformableInfo {
+  timestamp?: string;
+  meta?: LoggerMeta;
+}
+
 const isDev = process.env.NODE_ENV === 'development';
 
 const {
@@ -16,44 +29,40 @@ const {
 } = winston.format;
 const { Console } = winston.transports;
 
-const devConsole: any = isDev
-  ? new Console({
-    format: combine(
-      errors({ stack: true }),
-      timestamp(),
-      colorize(),
-      printf(({
-        level, message, timeStamp, meta,
-      }) => {
-        const err = (meta as any)?.error;
-        const req = (meta as any)?.req;
+const devConsole: winston.transports.ConsoleTransportInstance = new Console({
+  format: combine(
+    errors({ stack: true }),
+    timestamp(),
+    colorize(),
+    printf((info: LoggerInfo) => {
+      const err = info.meta?.error;
+      const req = info.meta?.req;
 
-        const reqInfo = req
-          ? `${req.method} ${req.originalUrl}`
-          : '';
+      const reqInfo = req
+        ? `${req.method} ${req.originalUrl}`
+        : '';
 
-        let stack = err?.stack
-          ? err.stack
-            .split('\n')
-            .filter((line: string) => !line.includes('node_modules'))
-            .join('\n')
-          : '';
+      let stack = err?.stack
+        ? err.stack
+          .split('\n')
+          .filter((line: string) => !line.includes('node_modules'))
+          .join('\n')
+        : '';
 
-        if (isCelebrateError(err)) {
-          const errs: string[] = [];
+      if (isCelebrateError(err)) {
+        const errs: string[] = [];
 
-          err.details.forEach((value, key) => {
-            const messages = value.details.map((d) => `[${key}] ${d.message}`);
-            errs.push(...messages);
-          });
-          stack += `\n${errs.join('\n')}`;
-        }
+        err.details.forEach((value, key) => {
+          const messages = value.details.map((d) => `[${key}] ${d.message}`);
+          errs.push(...messages);
+        });
+        stack += `\n${errs.join('\n')}`;
+      }
 
-        return `${level}: ${reqInfo} [${timeStamp}]\n${message}\n${stack}`;
-      }),
-    ),
-  })
-  : null;
+      return `${info.level}: ${reqInfo} [${info.timestamp}]\n${info.message}\n${stack}`;
+    }),
+  ),
+});
 
 // Лог запуска приложения
 const startLogger = winston.createLogger({
@@ -104,7 +113,7 @@ const errorLogger = expressWinston.errorLogger({
         json(),
       ),
     }),
-    devConsole,
+    ...(isDev ? [devConsole] : []),
   ],
 });
 

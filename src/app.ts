@@ -11,7 +11,8 @@ import { startLogger, requestLogger, errorLogger } from './middlewares/logger';
 import errorHandler from './middlewares/errorHandler';
 import { publicRouter, protectedRouter, notFoundRouter } from './routes';
 
-const port = 8000;
+const port = process.env.PORT;
+const mongodbUri = process.env.MONGODB_URI;
 const app = express();
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -33,7 +34,7 @@ app.use(errorLogger); // логер ошибок
 app.use(errors);
 app.use(errorHandler);
 
-connect('mongodb://localhost:27017/test')
+connect(mongodbUri as string)
   .then(() => { startLogger.info('MongoDB connected!'); })
   .catch((err) => { startLogger.error(`MongoDB connection error: ${err}`); });
 app.listen(port, (err) => {

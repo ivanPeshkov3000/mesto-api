@@ -4,12 +4,12 @@ import jwt, { Secret } from 'jsonwebtoken';
 import 'dotenv/config';
 
 import User from '../models/user.model';
-import type { IUser, SessionRequest } from '../utils/types';
+import type { SessionRequest } from '../utils/types';
 import promiseCatch from '../utils/promiseCatch';
 
 // Получить всех пользователей
 export const getUsers = promiseCatch(async (req: Request, res: Response) => {
-  const users: IUser[] = await User.find({}, 'name about avatar');
+  const users = await User.find({}, 'name about avatar');
   res.status(200).json(users);
 });
 
