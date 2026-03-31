@@ -3,6 +3,8 @@ import bcrypt from 'bcrypt';
 import isEmail from 'validator/lib/isEmail';
 
 import { IUser, UserModel } from '../utils/types';
+import HttpError from '../utils/errors/httpError';
+import { HttpStatus } from '../utils/httpStatuses';
 
 const userSchema = new Schema<IUser, UserModel>({
   name: {
@@ -49,11 +51,11 @@ userSchema.static('findUserByCredentials', async function findUserByCredentials(
 
   // не нашёлся — отклоняем промис
   if (!user) {
-    return Promise.reject(new Error('Неправильные почта или пароль'));
+    return Promise.reject(new HttpError(HttpStatus.Unauthorized.code, 'Неправильные почта или пароль'));
   }
   const matched = await bcrypt.compare(password, user.password);
   if (!matched) {
-    return Promise.reject(new Error('Неправильные почта или пароль'));
+    return Promise.reject(new HttpError(HttpStatus.Unauthorized.code, 'Неправильные почта или пароль'));
   }
   return user;
 });

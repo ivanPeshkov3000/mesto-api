@@ -12,6 +12,12 @@ const Card = model<ICard>('Card', new Schema({
   link: {
     type: Schema.Types.String,
     required: true,
+    validate: {
+      validator(v) {
+        return /^https?:\/\/(www\.)?[a-zA-Z0-9-.]+\.[a-zA-Z]{2,}(\/[a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=]*)?#?$/.test(v);
+      },
+      message: (props) => `${props.value} не является валидной ссылкой!`,
+    }
   },
   owner: {
     type: Schema.Types.ObjectId,

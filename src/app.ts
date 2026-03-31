@@ -18,19 +18,18 @@ const limiter = rateLimit({
   max: 500,
 });
 
-app.use(express.json());
-app.use(helmet());
-app.use(limiter);
-app.use(cookieParser()); // подключаем парсер кук
-app.use(requestLogger); // подключаем логер запросов
+app.use(express.json()); // Парсим json
+app.use(helmet()); // Настройка заголовков
+app.use(limiter); // Ограничиваем запросы
+app.use(cookieParser()); // парсер кук
+app.use(requestLogger); // логер запросов
 
 app.use(publicRouter);
 app.use(authGuard);
-// protectedRouter.use(authGuard);
 app.use(protectedRouter);
 app.use(notFoundRouter);
 
-app.use(errorLogger); // подключаем логер ошибок
+app.use(errorLogger); // логер ошибок
 app.use(errors);
 app.use(errorHandler);
 

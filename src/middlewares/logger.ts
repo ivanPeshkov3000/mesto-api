@@ -3,6 +3,8 @@ import expressWinston from 'express-winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 import { isCelebrateError } from 'celebrate';
 
+const isDev = process.env.NODE_ENV === 'development';
+
 const {
   combine,
   colorize,
@@ -13,6 +15,45 @@ const {
   printf,
 } = winston.format;
 const { Console } = winston.transports;
+
+const devConsole: any = isDev
+  ? new Console({
+    format: combine(
+      errors({ stack: true }),
+      timestamp(),
+      colorize(),
+      printf(({
+        level, message, timeStamp, meta,
+      }) => {
+        const err = (meta as any)?.error;
+        const req = (meta as any)?.req;
+
+        const reqInfo = req
+          ? `${req.method} ${req.originalUrl}`
+          : '';
+
+        let stack = err?.stack
+          ? err.stack
+            .split('\n')
+            .filter((line: string) => !line.includes('node_modules'))
+            .join('\n')
+          : '';
+
+        if (isCelebrateError(err)) {
+          const errs: string[] = [];
+
+          err.details.forEach((value, key) => {
+            const messages = value.details.map((d) => `[${key}] ${d.message}`);
+            errs.push(...messages);
+          });
+          stack += `\n${errs.join('\n')}`;
+        }
+
+        return `${level}: ${reqInfo} [${timeStamp}]\n${message}\n${stack}`;
+      }),
+    ),
+  })
+  : null;
 
 // Лог запуска приложения
 const startLogger = winston.createLogger({
@@ -63,46 +104,7 @@ const errorLogger = expressWinston.errorLogger({
         json(),
       ),
     }),
-    ...(process.env.NODE_ENV === 'development'
-      ? [new winston.transports.Console({
-        format: combine(
-          errors({ stack: true }),
-          timestamp(),
-          colorize(),
-          printf(({
-            level, message, timeStamp, meta,
-          }) => {
-            const err = (meta as any)?.error;
-            const req = (meta as any)?.req;
-
-            // только нужное из мета
-            const reqInfo = req
-              ? `${req.method} ${req.originalUrl}`
-              : '';
-
-            // стектрейс только из твоего кода
-            let stack = err?.stack
-              ? err.stack
-                .split('\n')
-                .filter((line: string) => !line.includes('node_modules'))
-                .join('\n')
-              : '';
-
-            if (isCelebrateError(err)) {
-              const errs: string[] = [];
-
-              err.details.forEach((value, key) => {
-                const messages = value.details.map((d) => `[${key}] ${d.message}`);
-                errs.push(...messages);
-              });
-              stack += `\n${errs.join('\n')}`;
-            }
-
-            return `${level}: ${reqInfo} [${timeStamp}]\n${message}\n${stack}`;
-          }),
-        ),
-      })]
-      : []),
+    devConsole,
   ],
 });
 

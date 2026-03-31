@@ -11,6 +11,7 @@ const notFoundRouter = Router();
 
 publicRouter.use('/', users.publicRouter, cards.publicRouter);
 protectedRouter.use('/', users.protectedRouter, cards.protectedRouter);
+
 // 404
 notFoundRouter.all('/', (req, res, next) => {
   next(new HttpError(HttpStatus.NotFound));
